@@ -1,0 +1,44 @@
+
+spring:
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: user_service
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://db:5432/postgres
+    username: task_manager
+    password: root
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    date-format: yyyy-MM-dd HH:mm:ss.SSS
+    time-zone: GMT+3
+  mail:
+    default-encoding: UTF-8
+    host: smtp.mail.ru
+    port: 465
+    username: H12333HHtest@mail.ru
+    password: vRGZyqZVsfWhZxL8khnT
+    test-connection: true
+    protocol: smtps
+  properties:
+    mail:
+      smtp:
+        starttls:
+          enable: true
+          required: true
+        auth: true
+        ssl:
+          trust:smtp.mail.ru
+feign:
+  audit:
+    url: http://audit-service:8080/out
+jwt:
+  secret: NDQ1ZjAzNjQtMzViZi00MDRjLTljZjQtNjNjYWIyZTU5ZDYw
+  issuer: ITAcademy
+server:
+  port: 8080

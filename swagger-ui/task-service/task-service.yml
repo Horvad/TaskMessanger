@@ -1,0 +1,621 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Менеджер задач
+  contact:
+    name: ITAcademy
+    url: http://it-academy.by
+
+servers:
+  - url: http://{host}:{port}
+    description: custom server
+    variables:
+      host:
+        description: host name
+        default: localhost
+      port:
+        description: port value
+        default: "80"
+
+tags:
+  - name: "Проекты"
+    description: "Информация о проектах"
+  - name: "Задачи"
+    description: "Информация о задачах"
+
+paths:
+  /api/v1/project:
+    post:
+      tags:
+        - "Проекты"
+      summary: "Добавление нового проекта"
+      security:
+        - bearerAuth: [ADMIN]
+      requestBody:
+        $ref: "#/components/requestBodies/CreateProject"
+      responses:
+        '201':
+          description: "Проект добавлен"
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Проекты"
+      summary: "Получить страницу доступных проектов для текущего пользователя"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+          description: Размер страницы
+          required: false
+        - in: query
+          name: archived
+          schema:
+            type: boolean
+            default: false
+          description: Отображать архивные проекты
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfProject'
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+  /api/v1/project/{uuid}:
+    get:
+      tags:
+        - "Проекты"
+      summary: "Получить информацию о проекте"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор проекта"
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+  /api/v1/project/{uuid}/dt_update/{dt_update}:
+    put:
+      tags:
+        - "Проекты"
+      summary: "Редактировать информацию о проекте"
+      security:
+        - bearerAuth: [ADMIN, MANAGER]
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор проекта"
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "Дата последнего обновления записи"
+      requestBody:
+        $ref: "#/components/requestBodies/CreateProject"
+      responses:
+        '200':
+          description: "Проект обновлён"
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+
+  /api/v1/task:
+    post:
+      tags:
+        - "Задачи"
+      summary: "Добавление новой задачи"
+      security:
+        - bearerAuth: []
+      requestBody:
+        $ref: "#/components/requestBodies/CreateTask"
+      responses:
+        '201':
+          description: "Задача добавлена"
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+    get:
+      tags:
+        - "Задачи"
+      summary: "Получить страницу доступных пользователю задач"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Номер страницы
+          required: false
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+          description: Размер страницы
+          required: false
+        - in: query
+          name: project
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProjectRef'
+          description: Фильтр по проектам
+          required: false
+        - in: query
+          name: implementer
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserRef'
+          description: Фильтр по пользователям
+          required: false
+        - in: query
+          name: status
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskStatus'
+          description: Фильтр по статусам
+          required: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageOfTask'
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+  /api/v1/task/{uuid}:
+    get:
+      tags:
+        - "Задачи"
+      summary: "Получить информацию о задаче"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор Задачи"
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+  /api/v1/task/{uuid}/dt_update/{dt_update}:
+    put:
+      tags:
+        - "Задачи"
+      summary: "Редактировать информацию о задаче"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор задачи"
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "Дата последнего обновления записи"
+      requestBody:
+        $ref: "#/components/requestBodies/CreateTask"
+      responses:
+        '200':
+          description: "Задача обновлена"
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+  /api/v1/task/{uuid}/dt_update/{dt_update}/status/{status}:
+    patch:
+      tags:
+        - "Задачи"
+      summary: "Изменить статус задачи"
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - in: path
+          name: uuid
+          description: "Идентификатор задачи"
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: path
+          name: dt_update
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: "Дата последнего обновления записи"
+        - in: path
+          name: status
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+          description: "На какой статус изменить"
+      responses:
+        '200':
+          description: "Задача обновлена"
+        '400':
+          $ref: '#/components/responses/Bad_Request'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/Internal_Server_Error'
+components:
+  requestBodies:
+    CreateProject:
+      description: Тело для создания Проекта
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+    CreateTask:
+      description: Тело для создания Задачи
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Task'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Bad_Request:
+      description: Запрос некорректен. Сервер не может обработать запрос
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - type: array
+                items:
+                  $ref: '#/components/schemas/t_error_response'
+              - $ref: '#/components/schemas/t_structured_error_response'
+          examples:
+            t_error_response:
+              value:
+                - logref: error
+                  message:  Запрос содержит некорректные данные. Измените запрос и отправьте его ещё раз
+            t_structured_error_response:
+              value:
+                logref: structured_error
+                errors:
+                  - field: time_unit
+                    message: Поле должно быть положительным числом
+    Unauthorized:
+      description: Для выполнения запроса на данный адрес требуется передать токен авторизации
+    Forbidden:
+      description: Данному токену авторизации запрещено выполнять запроса на данный адрес
+    Internal_Server_Error:
+      description: Внутренняя ошибка сервера. Сервер не смог корректно обработать запрос
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/t_error_response'
+          example:
+            - logref: error
+              message:  Сервер не смог корректно обработать запрос. Пожалуйста обратитесь к администратору
+  schemas:
+    UserRef:
+      type: object
+      description: Ссылка на пользователя
+      allOf:
+        - $ref: '#/components/schemas/t_ref'
+    ProjectStatus:
+      type: string
+      description: |
+        Статус проекта:
+          * `ACTIVE` - Активный
+          * `ARCHIVED` - Архивный
+      enum:
+        - "ACTIVE"
+        - "ARCHIVED"
+    Project:
+      type: object
+      description: Проект
+      allOf:
+        - $ref: '#/components/schemas/t_base_essence'
+      properties:
+        name:
+          type: string
+          description: "Название проекта"
+        description:
+          type: string
+          description: "Описание проекта"
+        manager:
+          $ref: '#/components/schemas/UserRef'
+        staff:
+          description: Участвующие в проекте
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+    ProjectRef:
+      type: object
+      description: Ссылка на проект
+      allOf:
+        - $ref: '#/components/schemas/t_ref'
+    TaskStatus:
+      type: string
+      description: |
+        Статус проекта:
+          * `WAIT` - Ожидает выполнения
+          * `BLOCK` - Не может быть выполнена
+          * `IN_WORK` - В работе
+          * `DONE` - Выполнена
+          * `CLOSE` - Закрыта
+      enum:
+        - "WAIT"
+        - "BLOCK"
+        - "IN_WORK"
+        - "DONE"
+        - "CLOSE"
+    Task:
+      type: object
+      description: Задача
+      required: [project, title]
+      allOf:
+        - $ref: '#/components/schemas/t_base_essence'
+      properties:
+        project:
+          $ref: '#/components/schemas/ProjectRef'
+        title:
+          type: string
+          description: "Название задачи"
+        description:
+          type: string
+          description: "Описание задачи"
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        implementer:
+          $ref: '#/components/schemas/UserRef'
+
+    PageOfProject:
+      type: object
+      description: Страница проектов
+      allOf:
+        - $ref: '#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    PageOfTask:
+      type: object
+      description: Страница задач
+      allOf:
+        - $ref: '#/components/schemas/t_page'
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+
+    t_ref:
+      type: object
+      description: Описание базовой сущности.
+      required:
+        - uuid
+      properties:
+        uuid:
+          description: Уникальный идентификатор сущности
+          type: string
+          format: uuid
+    t_base_essence:
+      type: object
+      description: Описание базовой сущности.
+      required:
+        - uuid
+        - dt_create
+        - dt_update
+      properties:
+        uuid:
+          description: Уникальный идентификатор сущности
+          type: string
+          format: uuid
+          readOnly: true
+        dt_create:
+          description: Дата создания сущности (linux time)
+          type: number
+          format: int64
+          readOnly: true
+        dt_update:
+          description: Дата последнего обновления сущности (linux time)
+          type: integer
+          format: int64
+          readOnly: true
+
+    t_page:
+      type: object
+      required:
+        - number
+        - size
+        - total_pages
+        - total_elements
+        - content
+        - first
+        - number_of_elements
+        - last
+      description: Страница
+      properties:
+        number:
+          description: Номер текущей запрошенной страницы
+          type: integer
+          format: int32
+        size:
+          description: Запрошенное количество элементов на страницу
+          type: integer
+          format: int32
+        total_pages:
+          description: Всего количество страниц учитывающих запрашиваемое количество элементов на страницу
+          type: integer
+          format: int32
+        total_elements:
+          description: Всего количество записей соответствующих запросу
+          type: integer
+          format: int64
+        first:
+          description: Признак является ли страница первой
+          type: boolean
+        number_of_elements:
+          description: Количество элементов на текущей странице
+          type: integer
+          format: int32
+        last:
+          description: Признак является ли страница последней
+          type: boolean
+
+    t_error_response:
+      type: object
+      description: Ошибка. Содержит общее описание ошибки
+      required:
+        - logref
+        - message
+      properties:
+        logref:
+          type: string
+          description: |
+            Тип ошибки (предназначено для машинной обработки):
+              * `error` - Признак что ошибка не привязана к полю
+          enum:
+            - "error"
+        message:
+          description: Сообщение об ошибке
+          type: string
+          example: Запрос содержит некорректные данные. Измените запрос и отправьте его ещё раз
+
+    t_structured_error_response:
+      type: object
+      description: Ошибка. Содержит описание ошибок с отсылками на поля сущности
+      required:
+        - logref
+        - errors
+      properties:
+        logref:
+          type: string
+          description: |
+            Тип ошибки (предназначено для машинной обработки):
+              * `structured_error` - Признак что ошибка привязана к полю
+          enum:
+            - "structured_error"
+        errors:
+          description: Список ошибок
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+                description: Сообщение об ошибке
+                example: Должно быть положительным числом
+              field:
+                type: string
+                description: Наименование поля с которым связано сообщение
+                example: time_unit

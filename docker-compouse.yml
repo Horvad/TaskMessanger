@@ -1,0 +1,88 @@
+version: '3.5'
+services:
+  db:
+    build: postgresql
+    image: taskmanager_postgresql:1.0.52
+    restart: always
+
+    environment:
+      POSTGRES_USER: task_manager
+      POSTGRES_PASSWORD: root
+    networks:
+      - taskmanager_ntwrk
+  pgadmin:
+    build: pgadmin
+    image: taskmanager_pgadmin:1.0.52
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "82:80"
+    networks:
+      - taskmanager_ntwrk
+  swagger-ui:
+    build: swagger-ui
+    image: taskmanager_swagger-ui:1.0.0
+    ports:
+      - "81:8080"
+    networks:
+      - taskmanager_ntwrk
+
+  user-service:
+    build: user-service
+    image: taskmanager_user-service:1.0.61
+    networks:
+      - taskmanager_ntwrk
+
+  audit-service:
+    build: audit-service
+    image: taskmanager_audit-service:1.0.53
+    networks:
+      - taskmanager_ntwrk
+
+  task-service:
+    build: task-service
+    image: taskmanager_task-service:1.0.63
+    networks:
+      - taskmanager_ntwrk
+
+  report-service:
+    build: report-service
+    image: taskmanager_report-service:1.0.60
+    networks:
+      - taskmanager_ntwrk
+    environment:
+      app.network.minio.host: minio:9000
+
+  proxy:
+    build: proxy
+    image: taskmanager_proxy:1.0.58
+    ports:
+      - "80:80"
+    networks:
+      - taskmanager_ntwrk
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9004:9004"
+      - "9050:9050"
+      - "9000:9000"
+    volumes:
+      - minio-data:/~
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server ~/minio --console-address :9050
+    networks:
+      - taskmanager_ntwrk
+
+volumes:
+  minio-data:
+
+networks:
+  taskmanager_ntwrk:
+    name: taskmanager_ntwrk
+
